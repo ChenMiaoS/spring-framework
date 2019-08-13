@@ -123,27 +123,32 @@ class ConstructorResolver {
 		Constructor<?> constructorToUse = null;
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
-
+		//如果getBean方法时候指定方法参数，那么直接使用
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
 		else {
+			//如果在getBean方法时没有指定则尝试从配置文件中解析
 			Object[] argsToResolve = null;
+			//尝试从缓存中获取
 			synchronized (mbd.constructorArgumentLock) {
 				constructorToUse = (Constructor<?>) mbd.resolvedConstructorOrFactoryMethod;
 				if (constructorToUse != null && mbd.constructorArgumentsResolved) {
 					// Found a cached constructor...
 					argsToUse = mbd.resolvedConstructorArguments;
 					if (argsToUse == null) {
+						//配置的构造函数参数
 						argsToResolve = mbd.preparedConstructorArguments;
 					}
 				}
 			}
+			//缓存中存在
 			if (argsToResolve != null) {
+				//解析参数类型，如给定方法的构造函数A(int, int) 则通过该方法后会把配置中的("1","1")转换为(`1,1),缓存中的值可能是原始值也可能是最终值
 				argsToUse = resolvePreparedArguments(beanName, mbd, bw, constructorToUse, argsToResolve, true);
 			}
 		}
-
+		//缓存中没有
 		if (constructorToUse == null || argsToUse == null) {
 			// Take specified constructors, if any.
 			Constructor<?>[] candidates = chosenCtors;
@@ -159,7 +164,7 @@ class ConstructorResolver {
 							"] from ClassLoader [" + beanClass.getClassLoader() + "] failed", ex);
 				}
 			}
-
+			//无参构造函数
 			if (candidates.length == 1 && explicitArgs == null && !mbd.hasConstructorArgumentValues()) {
 				Constructor<?> uniqueCandidate = candidates[0];
 				if (uniqueCandidate.getParameterCount() == 0) {
@@ -172,6 +177,7 @@ class ConstructorResolver {
 					return bw;
 				}
 			}
+
 
 			// Need to resolve the constructor.
 			boolean autowiring = (chosenCtors != null ||
@@ -187,7 +193,7 @@ class ConstructorResolver {
 				resolvedValues = new ConstructorArgumentValues();
 				minNrOfArgs = resolveConstructorArguments(beanName, mbd, bw, cargs, resolvedValues);
 			}
-
+			//排序给定的构造函数，public构造函数优先参数数量降序，非public构造函数参数数量降序
 			AutowireUtils.sortConstructors(candidates);
 			int minTypeDiffWeight = Integer.MAX_VALUE;
 			Set<Constructor<?>> ambiguousConstructors = null;
@@ -199,15 +205,19 @@ class ConstructorResolver {
 				if (constructorToUse != null && argsToUse != null && argsToUse.length > paramTypes.length) {
 					// Already found greedy constructor that can be satisfied ->
 					// do not look any further, there are only less greedy constructors left.
+					//如果已经找到选用的构造函数或者需要的函数个数小于当前的构造函数参数的个数则终止，因为已经按照参数个数降序排列
 					break;
 				}
 				if (paramTypes.length < minNrOfArgs) {
+					//参数个数不相等
 					continue;
 				}
 
 				ArgumentsHolder argsHolder;
 				if (resolvedValues != null) {
+					//有参数则根据值构造对应参数类型的参数
 					try {
+						//注释上获取参数名称
 						String[] paramNames = ConstructorPropertiesChecker.evaluate(candidate, paramTypes.length);
 						if (paramNames == null) {
 							ParameterNameDiscoverer pnd = this.beanFactory.getParameterNameDiscoverer();

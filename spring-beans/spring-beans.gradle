@@ -9,6 +9,7 @@ dependencies {
 	optional("org.codehaus.groovy:groovy-xml:${groovyVersion}")
 	optional("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
 	optional("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+	optional("org.apache.commons-logging:1.2")
 	testCompile("org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}")
 }
 
